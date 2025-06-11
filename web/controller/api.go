@@ -10,6 +10,7 @@ type APIController struct {
 	BaseController
 	inboundController *InboundController
 	Tgbot             service.Tgbot
+	serverService     service.ServerService
 }
 
 func NewAPIController(g *gin.RouterGroup) *APIController {
@@ -30,6 +31,7 @@ func (a *APIController) initRouter(g *gin.RouterGroup) {
 		Handler gin.HandlerFunc
 	}{
 		{"GET", "/createbackup", a.createBackup},
+		{"POST", "/importbackup", a.importBackup},
 		{"GET", "/", a.inboundController.getInbounds},
 		{"GET", "/get/:id", a.inboundController.getInbound},
 		{"GET", "/getClientTraffics/:email", a.inboundController.getClientTraffics},
@@ -54,4 +56,30 @@ func (a *APIController) initRouter(g *gin.RouterGroup) {
 
 func (a *APIController) createBackup(c *gin.Context) {
 	a.Tgbot.SendBackupToAdmins()
+}
+
+func (a *APIController) importBackup(c *gin.Context) {
+	// Get the file from the request body
+	file, _, err := c.Request.FormFile("db")
+	if err != nil {
+		jsonMsg(c, "Error reading db file", err)
+		return
+	}
+	defer file.Close()
+	
+	// Import it
+	err = a.serverService.ImportDB(file)
+	if err != nil {
+		jsonMsg(c, "", err)
+		return
+	}
+	
+	// Restart Xray service
+	err = a.serverService.RestartXrayService()
+	if err != nil {
+		jsonMsg(c, "Import successful, but failed to restart Xray", err)
+		return
+	}
+	
+	jsonObj(c, "Import DB successful", nil)
 }

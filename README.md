@@ -227,6 +227,7 @@ docker build -t x-ui .
 | `GET`  | `"/"`                              | Get all inbounds                          |
 | `GET`  | `"/get/:id"`                       | Get inbound with inbound.id               |
 | `GET`  | `"/createbackup"`                  | Telegram bot sends backup to admins       |
+| `POST` | `"/importbackup"`                  | Import a database backup file             |
 | `POST` | `"/add"`                           | Add inbound                               |
 | `POST` | `"/del/:id"`                       | Delete inbound                            |
 | `POST` | `"/update/:id"`                    | Update inbound                            |
